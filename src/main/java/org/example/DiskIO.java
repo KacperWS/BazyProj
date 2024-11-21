@@ -7,14 +7,17 @@ import java.nio.ByteBuffer;
 
 public class DiskIO {
     private String filename;
+    private String filenameNoext;
     private int readCounter;
     private int writeCounter;
     private BufferedInputStream bis;
     private BufferedOutputStream bos;
     private final int recordSize = 6;
+    private final int recToGenerate = 12 * recordSize;
 
     public DiskIO(String filename) throws IOException {
-        this.filename = filename;
+        this.filename = filename + ".txt";
+        this.filenameNoext = filename;
     }
 
     public void writeRecord(Record record) throws IOException {
@@ -55,19 +58,20 @@ public class DiskIO {
         this.bis = new BufferedInputStream(new FileInputStream(filename));
     }
 
-    public void openOUT() throws IOException {
+    public void openOUT(String filename) throws IOException {
         this.bos = new BufferedOutputStream(new FileOutputStream(filename));
     }
 
-    public static void main(String args) {
+    public void main(String args) {
         String fileName = "ter.txt"; // Change this to your file's path
 
         // Example binary data (byte array)
-        byte[] binaryData = new byte[24];  // Simulate a large binary data array
+        byte[] binaryData = new byte[4 * this.recToGenerate];  // Simulate a large binary data array
         Random rand = new Random();
         // Fill the array with some data for demonstration
         for (int i = 0; i < binaryData.length; i++) {
-            binaryData[i] = (byte) ((rand.nextInt() + i * rand.nextInt()));  // Fill with some values (0-255)
+            rand.nextInt();
+            binaryData[i] = (byte) (((rand.nextInt(0, i+1))+i)%(i+1));  // Fill with some values (0-255)
         }
 
         try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(fileName))) {
@@ -83,7 +87,7 @@ public class DiskIO {
             e.printStackTrace();
         }
 
-        try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fileName))) {
+        /*try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fileName))) {
             byte[] buffer = new byte[1024]; // Buffer size (1 KB)
             int bytesRead;
             ArrayList <Record> lista = new ArrayList<>();
@@ -110,7 +114,7 @@ public class DiskIO {
                         array = array1;
                         lista.add(nowy);
                     }
-                }
+                }*/
                 /*int j = 0;
                 byte something[] = new byte[4];
                 while(j < 4){
@@ -140,19 +144,18 @@ public class DiskIO {
                 for (byte b : byteArray) {
                     System.out.printf("0x%02X ", b);  // Print each byte in hexadecimal format
                 }*/
-                lista.clear();
+         /*       lista.clear();
                 System.out.println();
             }
 
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     public List<Record> read(int bufferSize) throws IOException{
-        this.openIN();
 
-        byte[] buffer = new byte[bufferSize * Integer.BYTES]; // Buffer size contains ints so
+        byte[] buffer = new byte[bufferSize * Integer.BYTES * recordSize]; // Buffer size contains ints so
         List<Record> lista = new ArrayList<>();
         // Read the file in chunks
         if (bis.read(buffer) != -1) {
@@ -161,14 +164,16 @@ public class DiskIO {
             IntBuffer test = bufferme.asIntBuffer();
             int i = 0; int hmm = this.recordSize;
             int[] array = new int [hmm];
-            //int[] array1 = new int [6];
+            //int[] array1 = new int [hmm];
             while(i < test.capacity()){
                 array[i%hmm] = test.get(i);
                 i++;
                 if(i%hmm == 0){
-                    Record news = new Record(array);
+                    Record newRecord = new Record(Arrays.copyOf(array, array.length));
                     //array = array1;
-                    lista.add(news);
+                    if (newRecord.isEmpty())
+                        break;
+                    lista.add(newRecord);
                 }
             }
         }else {
@@ -178,9 +183,10 @@ public class DiskIO {
         return lista;
     }
 
-    public void saveBuffers(List<Record> buffer, int bufferSize) throws IOException{
-        openOUT();
-        int bytesNum = bufferSize * Integer.BYTES;
+    public void saveBuffers(List<Record> buffer, int bufferSize, int buffNum) throws IOException{
+        String file = "img/"+this.filenameNoext + buffNum + ".txt";
+        openOUT(file);
+        int bytesNum = buffer.size() * recordSize * Integer.BYTES;//bufferSize * Integer.BYTES;
         byte[] binaryData = new byte[bytesNum];
         ByteBuffer temp = ByteBuffer.allocate(bytesNum);
         for (Record record : buffer) {
@@ -189,10 +195,16 @@ public class DiskIO {
                 temp.putInt(data[j]);
             }
         }
+        temp.flip();
         temp.get(binaryData);
         bos.write(binaryData);
         System.out.println("Binary data saved successfully in chunks to ");
         closeOUT();
+    }
+
+    public Record sortHere(int n){
+        
+        return null;
     }
 }
 

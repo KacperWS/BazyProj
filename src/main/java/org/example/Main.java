@@ -36,6 +36,8 @@ public class Main {
         }
 */
         BigBuffers test = new BigBuffers();
+        DiskIO temp = new DiskIO("ter");
+        temp.main("no");
         test.start();
         scanner.close();
     }
