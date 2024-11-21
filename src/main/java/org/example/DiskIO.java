@@ -58,8 +58,8 @@ public class DiskIO {
         this.bis = new BufferedInputStream(new FileInputStream(filename));
     }
 
-    public void openOUT(String filename) throws IOException {
-        this.bos = new BufferedOutputStream(new FileOutputStream(filename));
+    public void openOUT(String filename, boolean mode) throws IOException {
+        this.bos = new BufferedOutputStream(new FileOutputStream(filename, mode));
     }
 
     public void main(String args) {
@@ -185,7 +185,7 @@ public class DiskIO {
 
     public void saveBuffers(List<Record> buffer, int bufferSize, int buffNum) throws IOException{
         String file = "img/"+this.filenameNoext + buffNum + ".txt";
-        openOUT(file);
+        openOUT(file, false);
         int bytesNum = buffer.size() * recordSize * Integer.BYTES;//bufferSize * Integer.BYTES;
         byte[] binaryData = new byte[bytesNum];
         ByteBuffer temp = ByteBuffer.allocate(bytesNum);
@@ -202,9 +202,52 @@ public class DiskIO {
         closeOUT();
     }
 
-    public Record sortHere(int n){
-        
-        return null;
+    public void saveBuffer(List<Record> buffer, int buffNum) throws IOException{
+        String file = "img/"+this.filenameNoext + buffNum + ".txt";
+        openOUT(file, true);
+        int bytesNum = buffer.size() * recordSize * Integer.BYTES;//bufferSize * Integer.BYTES;
+        byte[] binaryData = new byte[bytesNum];
+        ByteBuffer temp = ByteBuffer.allocate(bytesNum);
+        for (Record record : buffer) {
+            int[] data = record.getData();
+            for (int j = 0; j < recordSize; j++) {
+                temp.putInt(data[j]);
+            }
+        }
+        temp.flip();
+        temp.get(binaryData);
+        bos.write(binaryData);
+        System.out.println("Binary data saved successfully in chunks to ");
+        closeOUT();
+    }
+
+    public Record sortHere(int n) throws IOException {
+
+        byte[] buffer = new byte[Integer.BYTES * recordSize]; // Buffer size contains ints so
+        Record newRecord = null;
+        // Read the file in chunks
+        if (bis.read(buffer) != -1) {
+            ByteBuffer bufferme;// = ByteBuffer.allocate(Integer.BYTES * 5 * buffSize);
+            bufferme = ByteBuffer.wrap(buffer);
+            IntBuffer test = bufferme.asIntBuffer();
+            int i = 0; int hmm = this.recordSize;
+            int[] array = new int [hmm];
+            //int[] array1 = new int [hmm];
+            while(i < test.capacity()){
+                array[i%hmm] = test.get(i);
+                i++;
+                if(i%hmm == 0){
+                    newRecord = new Record(Arrays.copyOf(array, array.length));
+                    //array = array1;
+                    break;
+                }
+            }
+        }else {
+            closeIN(); //File ended
+            return null; //Indicates that file ended
+        }
+        //return lista;
+        return newRecord;
     }
 }
 

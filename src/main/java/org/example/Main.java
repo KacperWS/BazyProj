@@ -39,6 +39,7 @@ public class Main {
         DiskIO temp = new DiskIO("ter");
         temp.main("no");
         test.start();
+        test.merge();
         scanner.close();
     }
 }
