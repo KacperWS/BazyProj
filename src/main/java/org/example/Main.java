@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
-        DiskIO diskIO = new DiskIO("1.txt"); diskIO.main("tets");
+        //DiskIO diskIO = new DiskIO("1.txt"); diskIO.main("tets");
 /*
         // Wczytaj rekordy z pliku lub z klawiatury
         System.out.println("Czy chcesz wczytać dane z pliku? (t/n)");
@@ -35,6 +35,8 @@ public class Main {
             System.out.println("Zawartość pliku po sortowaniu: " + sortedRecords);
         }
 */
+        BigBuffers test = new BigBuffers();
+        test.start();
         scanner.close();
     }
 }

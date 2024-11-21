@@ -20,6 +20,10 @@ public class Record {
         return this.id;
     }
 
+    public int[] getData() {
+        return data;
+    }
+
     private int calcValue(){
         int[] temp = this.data;
         int x = temp[5];

@@ -9,8 +9,11 @@ public class DiskIO {
     private String filename;
     private int readCounter;
     private int writeCounter;
+    private BufferedInputStream bis;
+    private BufferedOutputStream bos;
+    private final int recordSize = 6;
 
-    public DiskIO(String filename) {
+    public DiskIO(String filename) throws IOException {
         this.filename = filename;
     }
 
@@ -26,7 +29,7 @@ public class DiskIO {
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                records.add(new Record(Integer.parseInt(line)));
+                //records.add(new Record(Integer.parseInt(line)));
             }
         }
         return records;
@@ -34,6 +37,26 @@ public class DiskIO {
 
     public void clearFile() throws IOException {
         new FileWriter(filename).close(); // Opróżnia plik
+    }
+
+    public void closeIN() throws IOException {
+        if (bis != null) {
+            bis.close();
+        }
+    }
+
+    public void closeOUT() throws IOException {
+        if (bos != null) {
+            bos.close();
+        }
+    }
+
+    public void openIN() throws IOException {
+        this.bis = new BufferedInputStream(new FileInputStream(filename));
+    }
+
+    public void openOUT() throws IOException {
+        this.bos = new BufferedOutputStream(new FileOutputStream(filename));
     }
 
     public static void main(String args) {
@@ -75,14 +98,14 @@ public class DiskIO {
                 bufferme = ByteBuffer.wrap(buffer);
                 IntBuffer test = bufferme.asIntBuffer();
                 int i = 0; int hmm;
-                int[] array = new int [5];
-                int[] array1 = new int [5];
+                int[] array = new int [6];
+                int[] array1 = new int [6];
                 while((hmm = test.get(i)) != 0){
-                    array[i%5] = hmm;
+                    array[i%6] = hmm;
                     System.out.println(hmm);
                     i++;
-                    if(i > 0 && i%5 == 0){
-                        Record nowy = new Record(1);
+                    if(i > 0 && i%6 == 0){
+                        Record nowy = new Record(array);
                         nowy.setData(array);
                         array = array1;
                         lista.add(nowy);
@@ -126,10 +149,50 @@ public class DiskIO {
         }
     }
 
-    public IntBuffer read(){
-        IntBuffer results = null;
+    public List<Record> read(int bufferSize) throws IOException{
+        this.openIN();
 
-        return results;
+        byte[] buffer = new byte[bufferSize * Integer.BYTES]; // Buffer size contains ints so
+        List<Record> lista = new ArrayList<>();
+        // Read the file in chunks
+        if (bis.read(buffer) != -1) {
+            ByteBuffer bufferme;// = ByteBuffer.allocate(Integer.BYTES * 5 * buffSize);
+            bufferme = ByteBuffer.wrap(buffer);
+            IntBuffer test = bufferme.asIntBuffer();
+            int i = 0; int hmm = this.recordSize;
+            int[] array = new int [hmm];
+            //int[] array1 = new int [6];
+            while(i < test.capacity()){
+                array[i%hmm] = test.get(i);
+                i++;
+                if(i%hmm == 0){
+                    Record news = new Record(array);
+                    //array = array1;
+                    lista.add(news);
+                }
+            }
+        }else {
+            closeIN(); //File ended
+            return null; //Indicates that file ended
+        }
+        return lista;
+    }
+
+    public void saveBuffers(List<Record> buffer, int bufferSize) throws IOException{
+        openOUT();
+        int bytesNum = bufferSize * Integer.BYTES;
+        byte[] binaryData = new byte[bytesNum];
+        ByteBuffer temp = ByteBuffer.allocate(bytesNum);
+        for (Record record : buffer) {
+            int[] data = record.getData();
+            for (int j = 0; j < recordSize; j++) {
+                temp.putInt(data[j]);
+            }
+        }
+        temp.get(binaryData);
+        bos.write(binaryData);
+        System.out.println("Binary data saved successfully in chunks to ");
+        closeOUT();
     }
 }
 
