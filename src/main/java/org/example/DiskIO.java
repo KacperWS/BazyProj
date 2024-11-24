@@ -2,6 +2,9 @@ package org.example;
 
 import java.io.*;
 import java.nio.IntBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.nio.ByteBuffer;
 
@@ -13,7 +16,7 @@ public class DiskIO {
     private BufferedInputStream bis;
     private BufferedOutputStream bos;
     private final int recordSize = 6;
-    private final int recToGenerate = 12 * recordSize;
+    private final int recToGenerate = 100000 * recordSize;
 
     public DiskIO(String filename) throws IOException {
         this.filename = filename + ".txt";
@@ -58,8 +61,8 @@ public class DiskIO {
         this.bis = new BufferedInputStream(new FileInputStream(filename));
     }
 
-    public void openOUT(String filename, boolean mode) throws IOException {
-        this.bos = new BufferedOutputStream(new FileOutputStream(filename, mode));
+    public void openOUT(String Filename, boolean mode) throws IOException {
+        this.bos = new BufferedOutputStream(new FileOutputStream(Filename, mode));
     }
 
     public void main(String args) {
@@ -69,10 +72,15 @@ public class DiskIO {
         byte[] binaryData = new byte[4 * this.recToGenerate];  // Simulate a large binary data array
         Random rand = new Random();
         // Fill the array with some data for demonstration
-        for (int i = 0; i < binaryData.length; i++) {
+        ByteBuffer test = ByteBuffer.allocate(4 * this.recToGenerate);
+        for (int i = 0; i < binaryData.length / 4; i++) {
             rand.nextInt();
-            binaryData[i] = (byte) (((rand.nextInt(0, i+1))+i)%(i+1));  // Fill with some values (0-255)
+            int value = rand.nextInt(50);  // Small integer between 0 and 255
+
+            test.putInt(value);
+            // Store this value across the 4 bytes
         }
+        test.flip(); test.get(binaryData);
 
         try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(fileName))) {
             // Write the data in chunks
@@ -82,7 +90,7 @@ public class DiskIO {
                 bos.write(binaryData, i, bytesToWrite);
             }
 
-            System.out.println("Binary data saved successfully in chunks to " + fileName);
+            System.out.println("Binary data saved successfully in chunks to " + (4 * this.recToGenerate));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -198,13 +206,12 @@ public class DiskIO {
         temp.flip();
         temp.get(binaryData);
         bos.write(binaryData);
-        System.out.println("Binary data saved successfully in chunks to ");
+        //System.out.println("Binary data saved successfully in chunks to ");
         closeOUT();
     }
 
-    public void saveBuffer(List<Record> buffer, int buffNum) throws IOException{
-        String file = "img/"+this.filenameNoext + buffNum + ".txt";
-        openOUT(file, true);
+    public void saveBuffer(List<Record> buffer, String fileName) throws IOException{
+        openOUT(fileName, true);
         int bytesNum = buffer.size() * recordSize * Integer.BYTES;//bufferSize * Integer.BYTES;
         byte[] binaryData = new byte[bytesNum];
         ByteBuffer temp = ByteBuffer.allocate(bytesNum);
@@ -217,7 +224,7 @@ public class DiskIO {
         temp.flip();
         temp.get(binaryData);
         bos.write(binaryData);
-        System.out.println("Binary data saved successfully in chunks to ");
+        //System.out.println("Binary data saved successfully in chunks to ");
         closeOUT();
     }
 
@@ -246,8 +253,48 @@ public class DiskIO {
             closeIN(); //File ended
             return null; //Indicates that file ended
         }
+        readCounter+=24;
         //return lista;
         return newRecord;
+    }
+
+    public void deleteFile(){
+        Path path = Paths.get(filename);
+
+        try {
+            // Attempt to delete the file
+            Files.delete(path);
+            //System.out.println("File deleted successfully.");
+        } catch (IOException e) {
+            System.out.println("Failed to delete the file. Error: " + e.getMessage());
+        }
+    }
+
+    public int checkEnd(String path){
+        // Specify the folder path
+        Path folderPath = Paths.get(path);
+        boolean test = false; long test1 = 0;
+        try {
+            // Check if the folder exists and is a directory
+            if (Files.exists(folderPath) && Files.isDirectory(folderPath)) {
+                // Count the number of files in the folder
+                long fileCount = Files.list(folderPath)
+                        .filter(Files::isRegularFile) // Only count regular files
+                        .count();
+
+                int requiredFileCount = 1; // Replace with your desired number
+                test1 = fileCount;
+                return (int) fileCount;
+                // Check if the folder contains the required number of files
+                //test = fileCount == requiredFileCount;
+            } else {
+                System.out.println("The specified folder does not exist or is not a directory.");
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading the folder: " + e.getMessage());
+        }
+        return (int) test1;
+        //return test;
     }
 }
 
