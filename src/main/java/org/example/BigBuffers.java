@@ -25,6 +25,7 @@ public class BigBuffers {
     private int  jumpToSet;
     private final int bytesWrite;
     private int buffersInUse;
+    private String filename;
     //private int buffersEmpty;
 
     public BigBuffers(int bufferSize, int bufferNumber, String filename, int fileSize) throws IOException {
@@ -32,10 +33,11 @@ public class BigBuffers {
         this.bufferSize = bufferSize;
         this.fileSize = fileSize;
         this.bytesWrite = bufferSize * 6 * Integer.BYTES;
-        this.jumpToSet = bytesWrite * 2;
+        this.jumpToSet = bytesWrite;
         this.buffers = new ArrayList<>();
         allocateBuffers();
         this.discIO = new DiskIO(filename);
+        this.filename = filename;
     }
 
     public void setJumpToSet() {
@@ -76,7 +78,7 @@ public class BigBuffers {
         for(Buffer buffer : buffers){
             if (buffer.getBuffer().isEmpty())
                 break;
-            discIO.saveBuffer(buffer, "1", bytesWrite);
+            discIO.saveBuffer(buffer, filename + "1.txt", 6 * Integer.BYTES * buffer.getBuffer().size());
             //fileNumber++;
             buffer.getBuffer().clear();
         }
@@ -92,24 +94,28 @@ public class BigBuffers {
     }
 
     private void updateBuffersAfter(){
+        setJumpToSet();
         for(int i = 0; i < bufferNumber - 1; i++){
-            //buffers.get(i).setJump(0);
+            buffers.get(i).setJump(0);
             buffers.get(i).setNewJump(i, jumpToSet);
             buffers.get(i).setBytesRead(0);
         }
-        setJumpToSet();
         buffersInUse = 0;
     }
 
     private void updateBuffersBefore(){
         for(int i = 0; i < bufferNumber - 1; i++){
-            buffers.get(i).setNewJump(bufferNumber - 1, bytesWrite);
-            buffers.get(i).setBytesRead(0);
+            Buffer temp = buffers.get(i);
+            if(temp.getBytesRead() >= jumpToSet) {
+                temp.setNewJump(bufferNumber - 1, jumpToSet);
+                temp.setBytesRead(0);
+            }
         }
         buffersInUse = 0;
     }
 
     public void merge() throws IOException {
+        discIO.setFilename(filename + "1");
         while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
             while(!stageEnd) {
                 mergeBuffer();
@@ -119,8 +125,14 @@ public class BigBuffers {
             stageEnd = false;
 
             if (testNum == 0) {
+                filename = "ter2.txt";
+                discIO.deleteFile();
+                discIO.setFilename("ter2");
                 testNum = -1;
             } else if (testNum == -1){
+                filename = "ter1.txt";
+                discIO.deleteFile();
+                discIO.setFilename("ter1");
                 testNum = 0;
             }
         }
@@ -128,23 +140,24 @@ public class BigBuffers {
     }
 
     private void mergeBuffer() throws IOException {
-
-        int bytesSaved = 0; String fileName;
-        if(testNum == 0) {
-            fileName = "img2/ter" + counterFile + ".txt";
-        }else{
-            fileName = "img/ter" + counterFile + ".txt";
-        }
+        //discIO.openRAF();
         for(int i = 0; i < bufferNumber - 1; i++){
             stageEnd = discIO.sortHere(0, buffers.get(i), bytesWrite);
             if(stageEnd)
                 break;
             buffersInUse++;
         }
+        if (testNum == 0) {
+            filename = "ter2.txt";
+        } else if (testNum == -1){
+            filename = "ter1.txt";
+        }
         if(stageEnd && buffersInUse < 1){
             return;
         }else if(stageEnd && buffersInUse == 1){
-            discIO.saveBuffer(buffers.getFirst(), "2", bytesWrite);
+            discIO.saveBuffer(buffers.getFirst(), filename, 6 * Integer.BYTES * buffers.getFirst().getBuffer().size());
+            buffers.getFirst().getBuffer().clear();
+            stageEnd = false;
         }else{
             List<Buffer> copy = new ArrayList<>(buffers);
             copy.remove(buffers.getLast());
@@ -157,12 +170,12 @@ public class BigBuffers {
                 temp.add(temp1);
 
                 if(temp.size() == bufferSize){
-                    discIO.saveBuffer(buffers.getLast(), "2", bytesWrite);
+                    discIO.saveBuffer(buffers.getLast(), filename, bytesWrite);
                     buffers.getLast().getBuffer().clear();
                 }
             }
             if (!(buffers.getLast().getBuffer().isEmpty()))
-                discIO.saveBuffer(buffers.getLast(), "2", 4 * Integer.BYTES * buffers.getLast().getBuffer().size());
+                discIO.saveBuffer(buffers.getLast(), filename, 6 * Integer.BYTES * buffers.getLast().getBuffer().size());
             buffers.getLast().getBuffer().clear();
         }
     }

@@ -17,7 +17,7 @@ public class DiskIO {
     private BufferedOutputStream bos;
     private RandomAccessFile raf;
     private final int recordSize = 6;
-    private final int recToGenerate = 20 * recordSize;
+    private final int recToGenerate = 9 * recordSize;
 
     public DiskIO(String filename) throws IOException {
         this.filename = filename + ".txt";
@@ -46,6 +46,11 @@ public class DiskIO {
         new FileWriter(filename).close(); // Opróżnia plik
     }
 
+    public void setFilename(String filename){
+        this.filename = filename + ".txt";
+        this.filenameNoext = filename;
+    }
+
     public void closeIN() throws IOException {
         if (bis != null) {
             bis.close();
@@ -62,6 +67,12 @@ public class DiskIO {
         if (raf != null) {
             raf.close();
         }
+    }
+
+    public void closeALL() throws IOException {
+        closeIN();
+        closeOUT();
+        closeRAF();
     }
 
     public void openIN() throws IOException {
@@ -86,7 +97,7 @@ public class DiskIO {
         ByteBuffer test = ByteBuffer.allocate(4 * this.recToGenerate);
         for (int i = 0; i < binaryData.length / 4; i++) {
             rand.nextInt();
-            int value = rand.nextInt(50);  // Small integer between 0 and 255
+            int value = rand.nextInt(8);  // Small integer between 0 and 255
 
             test.putInt(value);
             // Store this value across the 4 bytes
@@ -139,8 +150,8 @@ public class DiskIO {
     }
 
     public void saveBuffer(Buffer buffer, String addon, int bufferSize) throws IOException{
-        String file = filenameNoext + addon + ".txt";//"img/"+this.filenameNoext + buffNum + ".txt";
-        openOUT(file, true);
+        //String file = filenameNoext + addon + ".txt";//"img/"+this.filenameNoext + buffNum + ".txt";
+        openOUT(addon, true);
         byte[] binaryData = new byte[bufferSize];
         ByteBuffer temp = ByteBuffer.allocate(bufferSize);
         List<Record> list = buffer.getBuffer();
@@ -151,7 +162,7 @@ public class DiskIO {
             }
         }
         temp.flip();
-        temp.get(binaryData);
+        temp.get(binaryData, 0, temp.limit());
         bos.write(binaryData);
         //System.out.println("Binary data saved successfully in chunks to ");
         closeOUT();
@@ -185,8 +196,9 @@ public class DiskIO {
             closeRAF(); //File ended
             return true; //Indicates that file ended
         }
-        buffer.setBytesRead(bufferSize);
+        buffer.updateBytesRead(bufferSize);
         buffer.setBuffer(lista);
+        closeRAF();
         return false;
     }
 

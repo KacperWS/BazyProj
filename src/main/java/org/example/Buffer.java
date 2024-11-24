@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Buffer {
     private int jump;
-    private int bytesRead;
+    private int bytesRead = 0;
     private int bufferSize = 100; //How many records can fit in
     private List<Record> buffer;
 
@@ -32,6 +32,10 @@ public class Buffer {
 
     public void setBytesRead(int bytesRead) {
         this.bytesRead = bytesRead;
+    }
+
+    public void updateBytesRead(int bytesRead){
+        this.bytesRead += bytesRead;
     }
 
     public void setJump(int jump) {
