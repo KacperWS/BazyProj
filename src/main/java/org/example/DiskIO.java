@@ -17,7 +17,7 @@ public class DiskIO {
     private BufferedOutputStream bos;
     private RandomAccessFile raf;
     private final int recordSize = 6;
-    private final int recToGenerate = 100 * recordSize;
+    private final int recToGenerate = 100000 * recordSize;
 
     public DiskIO(String filename) throws IOException {
         this.filename = filename + ".txt";
@@ -299,7 +299,7 @@ public class DiskIO {
                     suma+= temp[2] * (xpower *= x);
                     suma+= temp[3] * (xpower *= x);
                     suma+= temp[4] * (xpower * x);
-                    if(next < suma)
+                    if(next <= suma)
                         check++;
                     //System.out.println("Rekord = " + suma + " next " + next);
                     next = suma;
@@ -314,7 +314,7 @@ public class DiskIO {
             suma+= temp[2] * (xpower *= x);
             suma+= temp[3] * (xpower *= x);
             suma+= temp[4] * (xpower * x);
-            if(next == suma)
+            if(next <= suma)
                 check++;
             //next = suma;
             System.out.println("Rekord = " + check);

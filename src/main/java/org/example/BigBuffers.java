@@ -122,7 +122,7 @@ public class BigBuffers {
     public void merge() throws IOException {
         discIO.setFilename(filename + "1");
         System.out.println("Stage 0");
-        discIO.showFile();
+        //discIO.showFile();
         System.out.println();
         //int calcPhases = 100 / bufferSize;
         while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
@@ -140,7 +140,7 @@ public class BigBuffers {
                 discIO.deleteFile();
                 discIO.setFilename("ter2");
                 System.out.println("Stage 1");
-                discIO.showFile();
+                //discIO.showFile();
                 System.out.println();
                 testNum = -1;
             } else if (testNum == -1){
@@ -148,7 +148,7 @@ public class BigBuffers {
                 discIO.deleteFile();
                 discIO.setFilename("ter1");
                 System.out.println("Stage 2");
-                discIO.showFile();
+                //discIO.showFile();
                 System.out.println();
                 testNum = 0;
             }
@@ -231,5 +231,15 @@ public class BigBuffers {
     public void showResults(){
         System.out.println("Stages in 2: " + stageNumber);
         discIO.showResults();
+    }
+
+    public void showResults1(){
+        System.out.println("Stages in 2: " + stageNumber);
+        discIO.showFile();
+    }
+
+    public void check(){
+        discIO.check();
+        discIO.deleteFile();
     }
 }

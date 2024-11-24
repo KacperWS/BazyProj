@@ -37,10 +37,12 @@ public class Main {
 */
         DiskIO temp = new DiskIO("ter");
         int teste = temp.main("no");
-        BigBuffers test = new BigBuffers(10, 11, "ter", teste);
+        BigBuffers test = new BigBuffers(10, 1001, "ter", teste);
         test.start();
         test.merge();
         test.showResults();
+        //test.showResults1();
+        test.check();
         //temp = new DiskIO("ter2");
         //temp.showFile(); temp.se
         //temp.setFilename("ter2"); temp.showResults();
