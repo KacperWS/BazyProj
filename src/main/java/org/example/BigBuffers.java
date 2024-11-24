@@ -10,28 +10,46 @@ import java.util.Comparator;
 import java.util.List;
 
 public class BigBuffers {
-    private List<Record> records;
-    private final int bufferNumber = 10;
-    private final int bufferSize = 10;
-    private List<List<Record>> buffers;
+    private final int bufferNumber;
+    private final int bufferSize;
+    private final List<Buffer> buffers;
+    private final DiskIO discIO;
+
     private int fileNumber = 0;
     private int fileNumberMerge = 0;
     private int counterFile = 0;
     private int testNum = 0;
 
-    public BigBuffers(){
+    private int fileSize;
+    private boolean stageEnd = false;
+    private int  jumpToSet;
+    private final int bytesWrite;
+    private int buffersInUse;
+    //private int buffersEmpty;
+
+    public BigBuffers(int bufferSize, int bufferNumber, String filename, int fileSize) throws IOException {
+        this.bufferNumber = bufferNumber;
+        this.bufferSize = bufferSize;
+        this.fileSize = fileSize;
+        this.bytesWrite = bufferSize * 6 * Integer.BYTES;
+        this.jumpToSet = bytesWrite * 2;
         this.buffers = new ArrayList<>();
+        allocateBuffers();
+        this.discIO = new DiskIO(filename);
+    }
+
+    public void setJumpToSet() {
+        jumpToSet *= 2;
     }
 
     public void start() throws IOException {
-        DiskIO temp = new DiskIO("ter");
         int i = 0;
         List<Record> list = new ArrayList<>();
-        temp.openIN();
+        discIO.openIN();
         while(list  != null) {
             while (i < bufferNumber) {
-                if((list = temp.read(this.bufferSize)) != null) {
-                    this.buffers.add(list);
+                if((list = discIO.read(this.bufferSize)) != null) {
+                    this.buffers.get(i).setBuffer(list);
                     i++;
                 }else{
                     break;
@@ -39,143 +57,121 @@ public class BigBuffers {
             }
             i = 0;
             this.sort();
-            this.save(temp);
+            this.save();
         }
     }
 
     private void sort(){
-        for (List<Record> buffer : buffers) {
-            if (buffer.size() > 1) {
-                buffer.sort(Comparator.comparingInt(Record::getId));
+        for (Buffer buffer : buffers) {
+            List<Record> temp = buffer.getBuffer();
+            if (temp.size() > 1) {
+                temp.sort(Comparator.comparingInt(Record::getId));
             } else {
                 break;
             }
         }
     }
 
-    private void save(DiskIO temp) throws IOException {
-        for(List<Record> buffer : buffers){
-            temp.saveBuffers(buffer, bufferSize, fileNumber);
-            fileNumber++;
+    private void save() throws IOException {
+        for(Buffer buffer : buffers){
+            discIO.saveBuffer(buffer, "1", bytesWrite);
+            //fileNumber++;
+            buffer.getBuffer().clear();
         }
-        this.buffers.clear();// = new ArrayList<>();
+        //this.buffers.clear();// = new ArrayList<>();
     }
 
     private void allocateBuffers(){
-       // buffers = new ArrayList<>(bufferNumber);
-        List<Record> temp;
-        for(int i = bufferNumber; i > 0; i--){
-            temp = new ArrayList<>();
-            buffers.add(temp);
+        for(int i = 0; i < bufferNumber - 1; i++){
+            Buffer temp1 = new Buffer(bufferSize);
+            temp1.setJump(i * bytesWrite);
+            buffers.set(i, temp1);
         }
     }
 
+    private void updateBuffersAfter(){
+        for(int i = 0; i < bufferNumber - 1; i++){
+            buffers.get(i).setNewJump(i, jumpToSet);
+            buffers.get(i).setBytesRead(0);
+        }
+        setJumpToSet();
+        buffersInUse = 0;
+    }
+
+    private void updateBuffersBefore(){
+        for(int i = 0; i < bufferNumber - 1; i++){
+            buffers.get(i).setNewJump(i, jumpToSet);
+            i++;
+        }
+        buffersInUse = 0;
+    }
+
     public void merge() throws IOException {
-        DiskIO temp = new DiskIO("ter");
-        allocateBuffers();
-        String path = "img"; int count = fileNumber;
-        while(count > 1) {
-            for (int i = bufferNumber; i > 0; i--) {
-                //buffers.add(i - 1, new ArrayList<>());
-                mergeBuffer(i - 1, bufferNumber - 1);
-                if (fileNumber < 1) {
-                    //fileNumber = counterFile;
-                    break;
-                }
+        while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
+            while(!stageEnd) {
+                mergeBuffer();
+                updateBuffersBefore();
             }
-            //count = temp.checkEnd(path);
-            count = fileNumber;
-            if (testNum == 0 && count < 1) {
-                path = "img2";
-                //count = temp.checkEnd(path);
+            updateBuffersAfter();
+            stageEnd = false;
+
+            if (testNum == 0) {
                 testNum = -1;
-                fileNumber = counterFile;
-                count = fileNumber;
-                counterFile = 0;
-                fileNumberMerge = 0;
-            } else if (testNum == -1 && count < 1){
-                path = "img";
-                //count = temp.checkEnd(path);
+            } else if (testNum == -1){
                 testNum = 0;
-                fileNumber = counterFile;
-                count = fileNumber;
-                counterFile = 0;
-                fileNumberMerge = 0;
-            }else{
-                path = "img";
             }
         }
         System.out.println("Soting ended");
     }
 
-    private void mergeBuffer(int xd, int n) throws IOException {
-        DiskIO save = new DiskIO("ter");
-        List<DiskIO> files = new ArrayList<>();
-        List<Record> buffer = buffers.get(xd);
-        List<Record> result = new ArrayList<>();
-        int bytesSaved = 0; String fileName;
-        if(testNum == 0) {
-            fileName = "img/ter";// + fileNumberMerge;// + ".txt";
-        }else{
-            fileName = "img2/ter";// + fileNumberMerge;// + ".txt";
-        }
-        for(int i = 0; i < n; i++){
-            File file = new File(fileName + fileNumberMerge + ".txt");
+    private void mergeBuffer() throws IOException {
 
-            // Check if the file exists
-            if (file.exists()) {
-                files.add(new DiskIO(fileName + fileNumberMerge));
-                fileNumberMerge++;
-                files.get(i).openIN();
-            }
-            else {
-                n = i;
-                break;
-            }
-        }
+        int bytesSaved = 0; String fileName;
         if(testNum == 0) {
             fileName = "img2/ter" + counterFile + ".txt";
         }else{
             fileName = "img/ter" + counterFile + ".txt";
         }
-
-        int temp = 0;
-        Record temp1;
-       for(int i = 0; i < n; i++) {
-            result.add(files.get(i).sortHere(n));
+        for(int i = 0; i < bufferNumber - 2; i++){
+            stageEnd = discIO.sortHere(0, buffers.get(i), bytesWrite);
+            if(stageEnd)
+                break;
+            buffersInUse++;
         }
-        while(!files.isEmpty()){
-            temp1 = chooseMin(result);
-            temp = result.indexOf(temp1);
+        if(stageEnd && buffersInUse < 1){
+            return;
+        }else if(stageEnd && buffersInUse == 1){
+            discIO.saveBuffer(buffers.getFirst(), "2", bytesWrite);
+        }else{
+            List<Buffer> copy = new ArrayList<>(buffers);
+            Record temp1;
+            List<Record> temp = buffers.getLast().getBuffer();
 
-            buffer.add(temp1);
-            result.remove(temp1);
-            Record tempRecord; //to avoid losing data
-            if((tempRecord = (files.get(temp).sortHere(temp))) == null) {
-                files.get(temp).deleteFile();
-                files.remove(temp);
-                //n--;
-            }else
-                result.add(tempRecord);
-            if(buffer.size() == bufferSize){
-                save.saveBuffer(buffer, fileName);
-                bytesSaved += buffer.size() * 6 * Integer.BYTES;
-                buffer.clear();// = new ArrayList<>();
-                //buffer = te;
+            while(copy.size() > 1) {
+                temp1 = chooseMin(copy);
+
+                temp.add(temp1);
+
+                if(temp.size() == bufferSize){
+                    discIO.saveBuffer(buffers.getLast(), "2", bytesWrite);
+                }
             }
         }
-        save.saveBuffer(buffer, fileName);
-        buffer.clear();
-        counterFile++;
-        fileNumber-=n;
-        int suma = 6 + 6;
     }
 
-    private Record chooseMin(List <Record> lista){
-        Record temp = lista.getFirst();
-        for(int i = 1; i < lista.size(); i++){
-            if(temp.getId() > lista.get(i).getId())
-                temp = lista.get(i);
+    private Record chooseMin(List<Buffer> copy){
+        Record temp = copy.getFirst().getBuffer().getFirst();
+        int j = 0;
+        for(int i = 1; i < copy.size(); i++){
+            if(temp.getId() > copy.get(1).getBuffer().getFirst().getId()) {
+                temp = buffers.get(1).getBuffer().getFirst();
+                j = i;
+            }
+        }
+        copy.get(j).getBuffer().removeFirst();
+        if(buffers.get(j).getBuffer().isEmpty()) {
+            //buffersEmpty++;
+            copy.remove(j);
         }
         return temp;
     }

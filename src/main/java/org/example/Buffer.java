@@ -1,15 +1,17 @@
 package org.example;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Buffer {
     private int jump;
     private int bytesRead;
-    private final int bufferSize = 100; //How many records can fit in
+    private int bufferSize = 100; //How many records can fit in
     private List<Record> buffer;
 
-    public Buffer(){
-
+    public Buffer(int bufferSize){
+        this.bufferSize = bufferSize;
+        this.buffer = new ArrayList<>();
     }
 
     public int getBufferSize() {
@@ -39,4 +41,9 @@ public class Buffer {
     public void setBuffer(List<Record> buffer) {
         this.buffer = buffer;
     }
+
+    public void setNewJump(int n, int jumps){
+        jump = n * jumps;
+    }
+
 }

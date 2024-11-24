@@ -35,9 +35,9 @@ public class Main {
             System.out.println("Zawartość pliku po sortowaniu: " + sortedRecords);
         }
 */
-        BigBuffers test = new BigBuffers();
         DiskIO temp = new DiskIO("ter");
-        temp.main("no");
+        int teste = temp.main("no");
+        BigBuffers test = new BigBuffers(2, 3, "ter", teste);
         test.start();
         test.merge();
         scanner.close();
