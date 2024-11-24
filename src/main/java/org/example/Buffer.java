@@ -43,7 +43,7 @@ public class Buffer {
     }
 
     public void setNewJump(int n, int jumps){
-        jump = n * jumps;
+        jump += n * jumps;
     }
 
 }

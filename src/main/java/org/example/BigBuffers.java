@@ -74,6 +74,8 @@ public class BigBuffers {
 
     private void save() throws IOException {
         for(Buffer buffer : buffers){
+            if (buffer.getBuffer().isEmpty())
+                break;
             discIO.saveBuffer(buffer, "1", bytesWrite);
             //fileNumber++;
             buffer.getBuffer().clear();
@@ -82,15 +84,16 @@ public class BigBuffers {
     }
 
     private void allocateBuffers(){
-        for(int i = 0; i < bufferNumber - 1; i++){
+        for(int i = 0; i < bufferNumber; i++){
             Buffer temp1 = new Buffer(bufferSize);
             temp1.setJump(i * bytesWrite);
-            buffers.set(i, temp1);
+            buffers.add(temp1);
         }
     }
 
     private void updateBuffersAfter(){
         for(int i = 0; i < bufferNumber - 1; i++){
+            //buffers.get(i).setJump(0);
             buffers.get(i).setNewJump(i, jumpToSet);
             buffers.get(i).setBytesRead(0);
         }
@@ -100,8 +103,8 @@ public class BigBuffers {
 
     private void updateBuffersBefore(){
         for(int i = 0; i < bufferNumber - 1; i++){
-            buffers.get(i).setNewJump(i, jumpToSet);
-            i++;
+            buffers.get(i).setNewJump(bufferNumber - 1, bytesWrite);
+            buffers.get(i).setBytesRead(0);
         }
         buffersInUse = 0;
     }
@@ -132,7 +135,7 @@ public class BigBuffers {
         }else{
             fileName = "img/ter" + counterFile + ".txt";
         }
-        for(int i = 0; i < bufferNumber - 2; i++){
+        for(int i = 0; i < bufferNumber - 1; i++){
             stageEnd = discIO.sortHere(0, buffers.get(i), bytesWrite);
             if(stageEnd)
                 break;
@@ -144,18 +147,23 @@ public class BigBuffers {
             discIO.saveBuffer(buffers.getFirst(), "2", bytesWrite);
         }else{
             List<Buffer> copy = new ArrayList<>(buffers);
+            copy.remove(buffers.getLast());
             Record temp1;
             List<Record> temp = buffers.getLast().getBuffer();
 
-            while(copy.size() > 1) {
+            while(!copy.isEmpty()) {
                 temp1 = chooseMin(copy);
 
                 temp.add(temp1);
 
                 if(temp.size() == bufferSize){
                     discIO.saveBuffer(buffers.getLast(), "2", bytesWrite);
+                    buffers.getLast().getBuffer().clear();
                 }
             }
+            if (!(buffers.getLast().getBuffer().isEmpty()))
+                discIO.saveBuffer(buffers.getLast(), "2", 4 * Integer.BYTES * buffers.getLast().getBuffer().size());
+            buffers.getLast().getBuffer().clear();
         }
     }
 
@@ -163,13 +171,13 @@ public class BigBuffers {
         Record temp = copy.getFirst().getBuffer().getFirst();
         int j = 0;
         for(int i = 1; i < copy.size(); i++){
-            if(temp.getId() > copy.get(1).getBuffer().getFirst().getId()) {
-                temp = buffers.get(1).getBuffer().getFirst();
+            if(temp.getId() > copy.get(i).getBuffer().getFirst().getId()) {
+                temp = copy.get(i).getBuffer().getFirst();
                 j = i;
             }
         }
         copy.get(j).getBuffer().removeFirst();
-        if(buffers.get(j).getBuffer().isEmpty()) {
+        if(copy.get(j).getBuffer().isEmpty()) {
             //buffersEmpty++;
             copy.remove(j);
         }
