@@ -1,6 +1,6 @@
 package org.example;
 
-public class Record implements Cloneable{
+public class Record{
 
     private int id;
 
@@ -19,16 +19,6 @@ public class Record implements Cloneable{
     public Record(int[] dataSet, int id) {
         this.data = dataSet;
         this.id = id;
-    }
-
-    @Override
-    public Record clone() {
-        try {
-            return (Record) super.clone();  // Shallow copy
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     public int getId() {

@@ -35,11 +35,14 @@ public class Main {
             System.out.println("Zawartość pliku po sortowaniu: " + sortedRecords);
         }
 */
-        DiskIO temp = new DiskIO("ter");
+        DiskIO temp = new DiskIO("terw");
         int teste = temp.main("no");
-        BigBuffers test = new BigBuffers(2, 3, "ter", teste);
+        BigBuffers test = new BigBuffers(10, 10000, "ter", teste);
         test.start();
         test.merge();
+        //temp = new DiskIO("ter2");
+        //temp.showFile();
+        test.showResults();
         scanner.close();
     }
 }

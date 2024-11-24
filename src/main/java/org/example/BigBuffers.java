@@ -14,19 +14,15 @@ public class BigBuffers {
     private final int bufferSize;
     private final List<Buffer> buffers;
     private final DiskIO discIO;
+    private final int fileSize;
 
-    private int fileNumber = 0;
-    private int fileNumberMerge = 0;
-    private int counterFile = 0;
     private int testNum = 0;
-
-    private int fileSize;
     private boolean stageEnd = false;
     private int  jumpToSet;
     private final int bytesWrite;
     private int buffersInUse;
     private String filename;
-    //private int buffersEmpty;
+    private int stageNumber = 0;
 
     public BigBuffers(int bufferSize, int bufferNumber, String filename, int fileSize) throws IOException {
         this.bufferNumber = bufferNumber;
@@ -47,6 +43,9 @@ public class BigBuffers {
     public void start() throws IOException {
         int i = 0;
         List<Record> list = new ArrayList<>();
+        System.out.println("Stage -1");
+        //discIO.showFile();
+        System.out.println();
         discIO.openIN();
         while(list  != null) {
             while (i < bufferNumber) {
@@ -116,23 +115,35 @@ public class BigBuffers {
 
     public void merge() throws IOException {
         discIO.setFilename(filename + "1");
-        while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
+        System.out.println("Stage 0");
+        //discIO.showFile();
+        System.out.println();
+        int calcPhases = 1000000 / bufferSize;
+        while(buffers.get(1).getJump() < fileSize && calcPhases > 0) { //Second buffer will read nothing so sorted
             while(!stageEnd) {
                 mergeBuffer();
                 updateBuffersBefore();
             }
+            calcPhases /= bufferNumber;
+            System.out.println(calcPhases);
             updateBuffersAfter();
             stageEnd = false;
-
+            stageNumber++;
             if (testNum == 0) {
                 filename = "ter2.txt";
                 discIO.deleteFile();
                 discIO.setFilename("ter2");
+                System.out.println("Stage 1");
+                //discIO.showFile();
+                System.out.println();
                 testNum = -1;
             } else if (testNum == -1){
                 filename = "ter1.txt";
                 discIO.deleteFile();
                 discIO.setFilename("ter1");
+                System.out.println("Stage 2");
+                //discIO.showFile();
+                System.out.println();
                 testNum = 0;
             }
         }
@@ -160,7 +171,7 @@ public class BigBuffers {
             stageEnd = false;
         }else{
             List<Buffer> copy = new ArrayList<>(buffers);
-            copy.remove(buffers.getLast());
+            deleteUselessBuffers(copy);
             Record temp1;
             List<Record> temp = buffers.getLast().getBuffer();
 
@@ -180,7 +191,7 @@ public class BigBuffers {
         }
     }
 
-    private Record chooseMin(List<Buffer> copy){
+    private Record chooseMin(List<Buffer> copy) throws IOException {
         Record temp = copy.getFirst().getBuffer().getFirst();
         int j = 0;
         for(int i = 1; i < copy.size(); i++){
@@ -190,10 +201,29 @@ public class BigBuffers {
             }
         }
         copy.get(j).getBuffer().removeFirst();
+        Record temp2 = new Record(temp.getData(), temp.getId());
         if(copy.get(j).getBuffer().isEmpty()) {
             //buffersEmpty++;
-            copy.remove(j);
+            if(checkIfSpareInput(copy.get(j)))
+                copy.remove(j);
         }
-        return temp;
+        return temp2;
+    }
+
+    private boolean checkIfSpareInput(Buffer buffer) throws IOException {
+        if(!(buffer.getBytesRead() >= jumpToSet)){
+            return discIO.sortHere(0, buffer, bytesWrite);
+        }else{
+            return true;
+        }
+    }
+
+    private void deleteUselessBuffers(List<Buffer> list){
+        list.removeIf(buffer -> buffer.getBuffer().isEmpty());
+    }
+
+    public void showResults(){
+        System.out.println("Stages in 2: " + stageNumber);
+        discIO.showResults();
     }
 }

@@ -17,7 +17,7 @@ public class DiskIO {
     private BufferedOutputStream bos;
     private RandomAccessFile raf;
     private final int recordSize = 6;
-    private final int recToGenerate = 9 * recordSize;
+    private final int recToGenerate = 1000000 * recordSize;
 
     public DiskIO(String filename) throws IOException {
         this.filename = filename + ".txt";
@@ -146,6 +146,7 @@ public class DiskIO {
             closeIN(); //File ended
             return null; //Indicates that file ended
         }
+        readCounter++;
         return lista;
     }
 
@@ -163,7 +164,7 @@ public class DiskIO {
         }
         temp.flip();
         temp.get(binaryData, 0, temp.limit());
-        bos.write(binaryData);
+        bos.write(binaryData); writeCounter++;
         //System.out.println("Binary data saved successfully in chunks to ");
         closeOUT();
     }
@@ -197,7 +198,7 @@ public class DiskIO {
             return true; //Indicates that file ended
         }
         buffer.updateBytesRead(bufferSize);
-        buffer.setBuffer(lista);
+        buffer.setBuffer(lista); readCounter++;
         closeRAF();
         return false;
     }
@@ -212,6 +213,45 @@ public class DiskIO {
         } catch (IOException e) {
             System.out.println("Failed to delete the file. Error: " + e.getMessage());
         }
+    }
+
+    public void showFile(){
+        try (FileInputStream fis = new FileInputStream(filename)) {
+            byte[] byteBuffer = new byte[4];  // To store 4 bytes (size of an int)
+            int i = 0;
+            // Read the file in chunks of 4 bytes (size of an int)
+            int[] temp = new int[6];
+            while (fis.read(byteBuffer) != -1) {
+                // Convert the 4 bytes into an int
+                ByteBuffer byteBufferWrapper = ByteBuffer.wrap(byteBuffer);
+                int number = byteBufferWrapper.getInt();  // Get the int value from the byte array
+                if(i%6 == 0 && i > 0){
+                    int x = temp[5];
+                    int suma = 0, xpower = x;
+                    suma += temp[0] + temp[1] * xpower;
+                    suma+= temp[2] * (xpower *= x);
+                    suma+= temp[3] * (xpower *= x);
+                    suma+= temp[4] * (xpower * x);
+                    System.out.println("Rekord = " + suma);
+                }
+                temp[i%6] = number;
+                System.out.print(number + " ");
+                i++;
+            }
+            int x = temp[5];
+            int suma = 0, xpower = x;
+            suma += temp[0] + temp[1] * xpower;
+            suma+= temp[2] * (xpower *= x);
+            suma+= temp[3] * (xpower *= x);
+            suma+= temp[4] * (xpower * x);
+            System.out.println("Rekord = " + suma);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void showResults(){
+        System.out.println("Reads: " + readCounter + " Writes: " + writeCounter);
     }
 
     public int checkEnd(String path){
