@@ -17,7 +17,7 @@ public class DiskIO {
     private BufferedOutputStream bos;
     private RandomAccessFile raf;
     private final int recordSize = 6;
-    private final int recToGenerate = 1000000 * recordSize;
+    private final int recToGenerate = 100 * recordSize;
 
     public DiskIO(String filename) throws IOException {
         this.filename = filename + ".txt";
@@ -279,6 +279,48 @@ public class DiskIO {
         }
         return (int) test1;
         //return test;
+    }
+
+    public void check(){
+        try (FileInputStream fis = new FileInputStream(filename)) {
+            byte[] byteBuffer = new byte[4];  // To store 4 bytes (size of an int)
+            int i = 0;
+            // Read the file in chunks of 4 bytes (size of an int)
+            int[] temp = new int[6];
+            int suma = 0; int next = -1; int check = 0;
+            while (fis.read(byteBuffer) != -1) {
+                // Convert the 4 bytes into an int
+                ByteBuffer byteBufferWrapper = ByteBuffer.wrap(byteBuffer);
+                int number = byteBufferWrapper.getInt();  // Get the int value from the byte array
+                if(i%6 == 0 && i > 0){
+                    int x = temp[5];
+                    suma = 0; int xpower = x;
+                    suma += temp[0] + temp[1] * xpower;
+                    suma+= temp[2] * (xpower *= x);
+                    suma+= temp[3] * (xpower *= x);
+                    suma+= temp[4] * (xpower * x);
+                    if(next < suma)
+                        check++;
+                    //System.out.println("Rekord = " + suma + " next " + next);
+                    next = suma;
+                }
+                temp[i%6] = number;
+                //System.out.print(number + " ");
+                i++;
+            }
+            int x = temp[5];
+            suma = 0;int xpower = x;
+            suma += temp[0] + temp[1] * xpower;
+            suma+= temp[2] * (xpower *= x);
+            suma+= temp[3] * (xpower *= x);
+            suma+= temp[4] * (xpower * x);
+            if(next == suma)
+                check++;
+            //next = suma;
+            System.out.println("Rekord = " + check);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 

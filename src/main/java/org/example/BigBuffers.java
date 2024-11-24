@@ -36,8 +36,14 @@ public class BigBuffers {
         this.filename = filename;
     }
 
+    private int pow(int a, int b){
+        for(int i = 1; i < b; i++)
+            a *= a;
+        return a;
+    }
+
     public void setJumpToSet() {
-        jumpToSet *= 2;
+        jumpToSet = pow(bufferNumber - 1, stageNumber) * bufferSize * 6 * Integer.BYTES;
     }
 
     public void start() throws IOException {
@@ -116,25 +122,25 @@ public class BigBuffers {
     public void merge() throws IOException {
         discIO.setFilename(filename + "1");
         System.out.println("Stage 0");
-        //discIO.showFile();
+        discIO.showFile();
         System.out.println();
-        int calcPhases = 1000000 / bufferSize;
-        while(buffers.get(1).getJump() < fileSize && calcPhases > 0) { //Second buffer will read nothing so sorted
+        //int calcPhases = 100 / bufferSize;
+        while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
             while(!stageEnd) {
                 mergeBuffer();
                 updateBuffersBefore();
             }
-            calcPhases /= bufferNumber;
-            System.out.println(calcPhases);
+            stageNumber++;
+            //calcPhases /= bufferNumber;
+            //System.out.println(calcPhases);
             updateBuffersAfter();
             stageEnd = false;
-            stageNumber++;
             if (testNum == 0) {
                 filename = "ter2.txt";
                 discIO.deleteFile();
                 discIO.setFilename("ter2");
                 System.out.println("Stage 1");
-                //discIO.showFile();
+                discIO.showFile();
                 System.out.println();
                 testNum = -1;
             } else if (testNum == -1){
@@ -142,7 +148,7 @@ public class BigBuffers {
                 discIO.deleteFile();
                 discIO.setFilename("ter1");
                 System.out.println("Stage 2");
-                //discIO.showFile();
+                discIO.showFile();
                 System.out.println();
                 testNum = 0;
             }
