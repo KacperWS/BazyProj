@@ -1,10 +1,6 @@
 package org.example;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -24,6 +20,7 @@ public class BigBuffers {
     private String filename;
     private int stageNumber = 0;
     private boolean showResults = true;
+    private boolean showMidResults = false;
 
     public BigBuffers(int bufferSize, int bufferNumber, DiskIO filename, int fileSize) throws IOException {
         this.bufferNumber = bufferNumber;
@@ -121,9 +118,9 @@ public class BigBuffers {
         buffersInUse = 0;
     }
 
-    public void merge() throws IOException {
+    private void merge() throws IOException {
         discIO.setFilename(filename + "1.txt");
-        if(showResults) {
+        if(showMidResults) {
             System.out.println("After stage 1");
             discIO.showFile();
             System.out.println();
@@ -141,7 +138,7 @@ public class BigBuffers {
                 filename = "ter2.txt";
                 discIO.deleteFile();
                 discIO.setFilename("ter2.txt");
-                if(showResults) {
+                if(showMidResults) {
                     System.out.println("Stage 2 part: " + stageNumber);
                     discIO.showFile();
                     System.out.println();
@@ -151,7 +148,7 @@ public class BigBuffers {
                 filename = "ter1.txt";
                 discIO.deleteFile();
                 discIO.setFilename("ter1.txt");
-                if(showResults) {
+                if(showMidResults) {
                     System.out.println("Stage 2 part: " + stageNumber);
                     discIO.showFile();
                     System.out.println();
@@ -240,11 +237,16 @@ public class BigBuffers {
         this.showResults = showResults;
     }
 
+    public void setShowMidResults(boolean showMidResults) {
+        this.showMidResults = showMidResults;
+    }
+
     public void showResults(){
         System.out.println("Stage 2 parts: " + stageNumber);
         discIO.showFile();
         discIO.showResults();
-        check();
+        discIO.check();
+        //check();
     }
 
     public void check(){

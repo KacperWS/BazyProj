@@ -17,7 +17,7 @@ public class DiskIO {
     private BufferedOutputStream bos;
     private RandomAccessFile raf;
     private final int recordSize = 6;
-    private final int recToGenerate = 500000 * recordSize;
+    private int recToGenerate = 5000 * recordSize;
 
     public DiskIO(String filename) throws IOException {
         this.filename = filename;
@@ -35,6 +35,14 @@ public class DiskIO {
             bytes.get(table);
             bos.write(table);
         }
+    }
+
+    public void setRecToGenerate(int recToGenerate) {
+        this.recToGenerate = recToGenerate * recordSize;
+    }
+
+    public int getRecToGenerate() {
+        return recToGenerate;
     }
 
     public Record readRecord() throws IOException {
@@ -68,8 +76,9 @@ public class DiskIO {
     }
 
     public void setFilename(String filename){
-        this.filename = filename + ".txt";
-        this.filenameNoext = filename;
+        this.filename = filename;
+        String[] stringArray = filename.split("\\.");
+        this.filenameNoext = stringArray[0];
     }
 
     public void closeIN() throws IOException {
@@ -238,6 +247,8 @@ public class DiskIO {
                     System.out.println("Rekord = " + suma);
                 }
                 temp[i%6] = number;
+                if(i%6 == 0)
+                    System.out.print(i/6 + ". ");
                 System.out.print(number + " ");
                 i++;
             }
