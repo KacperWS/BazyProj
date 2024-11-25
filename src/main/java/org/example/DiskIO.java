@@ -36,7 +36,7 @@ public class DiskIO {
         }
     }
 
-    public List<Record> readRecords() throws IOException {
+    public List<Record> readRecord() throws IOException {
         List<Record> records = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line;
@@ -96,7 +96,7 @@ public class DiskIO {
         ByteBuffer test = ByteBuffer.allocate(4 * this.recToGenerate);
         for (int i = 0; i < binaryData.length / 4; i++) {
             rand.nextInt();
-            int value = rand.nextInt(8) + 1;
+            int value = rand.nextInt(8);
 
             test.putInt(value);
         }
@@ -131,9 +131,8 @@ public class DiskIO {
                 i++;
                 if(i%hmm == 0){
                     Record newRecord = new Record(Arrays.copyOf(array, array.length));
-                    //array = array1;
-                    if (newRecord.isEmpty())
-                        break;
+                    /*if (newRecord.isEmpty())
+                        break;*/
                     lista.add(newRecord);
                 }
             }
@@ -178,8 +177,8 @@ public class DiskIO {
                 i++;
                 if(i%hmm == 0){
                     Record newRecord = new Record(Arrays.copyOf(array, array.length));
-                    if (newRecord.isEmpty())
-                        break;
+                    /*if (newRecord.isEmpty())
+                        break;*/
                     lista.add(newRecord);
                 }
             }
