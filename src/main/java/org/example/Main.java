@@ -25,13 +25,15 @@ public class Main {
 
                 case "2": {
                     System.out.println("Creating random dataset: \n");
-                    diskIO = new DiskIO("ter");
+                    diskIO = new DiskIO("ter.txt");
+                    diskIO.createDataset();
                     break;
                 }
 
                 case "3": {
                     System.out.println("Specify the number of records: \n");
                     choice = scanner.nextLine(); int temp = Integer.parseInt(choice);
+                    diskIO = new DiskIO("ter.txt");
                     for(int i = 0; i < temp; i++){
                         choice = scanner.nextLine();
                         String[] stringArray = choice.split(" ");
@@ -41,6 +43,7 @@ public class Main {
                         for (int j = 0; j < stringArray.length; j++) {
                             intArray[j] = Integer.parseInt(stringArray[j]);
                         }
+                        diskIO.writeRecord(intArray);
                     }
 
 

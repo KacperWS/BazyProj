@@ -25,7 +25,7 @@ public class BigBuffers {
     private int stageNumber = 0;
     private boolean showResults = true;
 
-    public BigBuffers(int bufferSize, int bufferNumber, String filename, int fileSize) throws IOException {
+    public BigBuffers(int bufferSize, int bufferNumber, DiskIO filename, int fileSize) throws IOException {
         this.bufferNumber = bufferNumber;
         this.bufferSize = bufferSize;
         this.fileSize = fileSize;
@@ -33,16 +33,8 @@ public class BigBuffers {
         this.jumpToSet = bytesWrite;
         this.buffers = new ArrayList<>();
         allocateBuffers();
-        this.discIO = new DiskIO(filename);
-        this.filename = filename;
-    }
-
-    public boolean isShowResults() {
-        return showResults;
-    }
-
-    public void setShowResults(boolean showResults) {
-        this.showResults = showResults;
+        this.discIO = filename;//new DiskIO(filename);
+        this.filename = this.discIO.getFilename();
     }
 
     private int pow(int a, int b){
@@ -58,9 +50,11 @@ public class BigBuffers {
     public void start() throws IOException {
         int i = 0;
         List<Record> list = new ArrayList<>();
-        System.out.println("Stage -1");
-        //discIO.showFile();
-        System.out.println();
+        if(showResults) {
+            System.out.println("Before sort");
+            discIO.showFile();
+            System.out.println();
+        }
         discIO.openIN();
         while(list  != null) {
             while (i < bufferNumber) {
@@ -75,6 +69,7 @@ public class BigBuffers {
             this.sort();
             this.save();
         }
+        merge();
     }
 
     private void sort(){
@@ -127,10 +122,12 @@ public class BigBuffers {
     }
 
     public void merge() throws IOException {
-        discIO.setFilename(filename + "1");
-        System.out.println("Stage 0");
-        //discIO.showFile();
-        System.out.println();
+        discIO.setFilename(filename + "1.txt");
+        if(showResults) {
+            System.out.println("After stage 1");
+            discIO.showFile();
+            System.out.println();
+        }
         showResults();
         while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
             while(!stageEnd) {
@@ -143,22 +140,26 @@ public class BigBuffers {
             if (testNum == 0) {
                 filename = "ter2.txt";
                 discIO.deleteFile();
-                discIO.setFilename("ter2");
-                System.out.println("Stage 1");
-                //discIO.showFile();
-                System.out.println();
+                discIO.setFilename("ter2.txt");
+                if(showResults) {
+                    System.out.println("Stage 2 part: " + stageNumber);
+                    discIO.showFile();
+                    System.out.println();
+                }
                 testNum = -1;
             } else if (testNum == -1){
                 filename = "ter1.txt";
                 discIO.deleteFile();
-                discIO.setFilename("ter1");
-                System.out.println("Stage 2");
-                //discIO.showFile();
-                System.out.println();
+                discIO.setFilename("ter1.txt");
+                if(showResults) {
+                    System.out.println("Stage 2 part: " + stageNumber);
+                    discIO.showFile();
+                    System.out.println();
+                }
                 testNum = 0;
             }
         }
-        System.out.println("Soting ended");
+        System.out.println("Sorting ended");
     }
 
     private void mergeBuffer() throws IOException {
@@ -231,14 +232,19 @@ public class BigBuffers {
         list.removeIf(buffer -> buffer.getBuffer().isEmpty());
     }
 
-    public void showResults(){
-        System.out.println("Stages in 2: " + stageNumber);
-        discIO.showResults();
+    public boolean isShowResults() {
+        return showResults;
     }
 
-    public void showResults1(){
-        System.out.println("Stages in 2: " + stageNumber);
+    public void setShowResults(boolean showResults) {
+        this.showResults = showResults;
+    }
+
+    public void showResults(){
+        System.out.println("Stage 2 parts: " + stageNumber);
         discIO.showFile();
+        discIO.showResults();
+        check();
     }
 
     public void check(){

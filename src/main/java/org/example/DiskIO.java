@@ -20,8 +20,9 @@ public class DiskIO {
     private final int recToGenerate = 500000 * recordSize;
 
     public DiskIO(String filename) throws IOException {
-        this.filename = filename + ".txt";
-        this.filenameNoext = filename;
+        this.filename = filename;
+        String[] stringArray = filename.split("\\.");
+        this.filenameNoext = stringArray[0];
     }
 
     public void writeRecord(int[] data) throws IOException {
@@ -36,15 +37,34 @@ public class DiskIO {
         }
     }
 
-    public List<Record> readRecord() throws IOException {
-        List<Record> records = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                //records.add(new Record(Integer.parseInt(line)));
+    public Record readRecord() throws IOException {
+        openIN();
+        byte[] buffer = new byte[Integer.BYTES * recordSize];
+        Record newRecord = null;
+        if (bis.read(buffer) != -1) {
+            ByteBuffer bufferme;
+            bufferme = ByteBuffer.wrap(buffer);
+            IntBuffer test = bufferme.asIntBuffer();
+            int i = 0; int hmm = this.recordSize;
+            int[] array = new int [hmm];
+            while(i < test.capacity()){
+                array[i%hmm] = test.get(i);
+                i++;
+                if(i%hmm == 0){
+                    newRecord = new Record(Arrays.copyOf(array, array.length));
+                    break;
+                }
             }
+        }else {
+            closeIN(); //File ended
+            return null; //Indicates that file ended
         }
-        return records;
+        closeIN();
+        return newRecord;
+    }
+
+    public String getFilename() {
+        return filenameNoext;
     }
 
     public void setFilename(String filename){
@@ -88,7 +108,7 @@ public class DiskIO {
         this.raf = new RandomAccessFile(filename, "r");
     }
 
-    public int main(String args) {
+    public void createDataset() {
         String fileName = "ter.txt";
         byte[] binaryData = new byte[4 * this.recToGenerate];
         Random rand = new Random();
@@ -113,7 +133,6 @@ public class DiskIO {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return 4 * this.recToGenerate;
     }
 
     public List<Record> read(int bufferSize) throws IOException{
