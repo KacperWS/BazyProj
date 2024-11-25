@@ -93,10 +93,8 @@ public class BigBuffers {
             if (buffer.getBuffer().isEmpty())
                 break;
             discIO.saveBuffer(buffer, filename + "1.txt", 6 * Integer.BYTES * buffer.getBuffer().size());
-            //fileNumber++;
             buffer.getBuffer().clear();
         }
-        //this.buffers.clear();// = new ArrayList<>();
     }
 
     private void allocateBuffers(){
@@ -134,15 +132,12 @@ public class BigBuffers {
         //discIO.showFile();
         System.out.println();
         showResults();
-        //int calcPhases = 100 / bufferSize;
         while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
             while(!stageEnd) {
                 mergeBuffer();
                 updateBuffersBefore();
             }
             stageNumber++;
-            //calcPhases /= bufferNumber;
-            //System.out.println(calcPhases);
             updateBuffersAfter();
             stageEnd = false;
             if (testNum == 0) {
@@ -167,7 +162,6 @@ public class BigBuffers {
     }
 
     private void mergeBuffer() throws IOException {
-        //discIO.openRAF();
         for(int i = 0; i < bufferNumber - 1; i++){
             stageEnd = discIO.sortHere(0, buffers.get(i), bytesWrite);
             if(stageEnd)
@@ -219,7 +213,6 @@ public class BigBuffers {
         copy.get(j).getBuffer().removeFirst();
         Record temp2 = new Record(temp.getData(), temp.getId());
         if(copy.get(j).getBuffer().isEmpty()) {
-            //buffersEmpty++;
             if(checkIfSpareInput(copy.get(j)))
                 copy.remove(j);
         }
