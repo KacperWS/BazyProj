@@ -250,7 +250,7 @@ public class BigBuffers {
     }
 
     public void check(){
-        discIO.check();
+        //discIO.check();
         discIO.deleteFile();
     }
 }

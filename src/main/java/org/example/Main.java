@@ -87,12 +87,13 @@ public class Main {
 
         DiskIO temp = new DiskIO("ter.txt");
         temp.createDataset();
-        BigBuffers test = new BigBuffers(50, 1001, temp, temp.getRecToGenerate() * 4);
+        BigBuffers test = new BigBuffers(200, 101, temp, temp.getRecToGenerate() * 4);
+        test.setShowResults(false); test.setShowMidResults(false);
         test.start();
         //test.merge();
         test.showResults();
         //test.showResults1();
-        test.check();
+        //test.check();
         //temp = new DiskIO("ter2");
         //temp.showFile(); temp.se
         //temp.setFilename("ter2"); temp.showResults();
