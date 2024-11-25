@@ -7,37 +7,71 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
-        //DiskIO diskIO = new DiskIO("1.txt"); diskIO.main("tets");
-/*
-        // Wczytaj rekordy z pliku lub z klawiatury
-        System.out.println("Czy chcesz wczytać dane z pliku? (t/n)");
-        String choice = scanner.nextLine();
-        if (choice.equalsIgnoreCase("t")) {
-            List<Record> records = diskIO.readRecords();
-            System.out.println("Zawartość pliku przed sortowaniem: " + records);
-            NaturalMergeSort sorter = new NaturalMergeSort(records);
-            List<Record> sortedRecords = sorter.sort();
-            System.out.println("Zawartość pliku po sortowaniu: " + sortedRecords);
-        } else {
-            diskIO.clearFile();
-            System.out.println("Ile rekordów chcesz wprowadzić?");
-            int n = scanner.nextInt();
-            scanner.nextLine(); // Konsumuje nową linię
-            for (int i = 0; i < n; i++) {
-                System.out.println("Wprowadź rekord:");
-                int value = scanner.nextInt();
-                diskIO.writeRecord(new Record(value));
+        DiskIO diskIO;
+
+        System.out.println("What can I do for you? (Merging with large buffers)");
+
+        boolean loop = true;
+        while(loop) {
+            System.out.println("1. Read from the file \n2.Create random dataset \n3. Read dataset from keyboard \n4. Change options \n5.Sorting \n6.Exit \n");
+            String choice = scanner.nextLine();
+            switch (choice) {
+                case "1": {
+                    System.out.println("Specify the file to read: \n");
+                    choice = scanner.nextLine();
+                    diskIO = new DiskIO(choice);
+                    break;
+                }
+
+                case "2": {
+                    System.out.println("Creating random dataset: \n");
+                    diskIO = new DiskIO("ter");
+                    break;
+                }
+
+                case "3": {
+                    System.out.println("Specify the number of records: \n");
+                    choice = scanner.nextLine(); int temp = Integer.parseInt(choice);
+                    for(int i = 0; i < temp; i++){
+                        choice = scanner.nextLine();
+                        String[] stringArray = choice.split(" ");
+
+                        int[] intArray = new int[stringArray.length];
+
+                        for (int j = 0; j < stringArray.length; j++) {
+                            intArray[j] = Integer.parseInt(stringArray[j]);
+                        }
+                    }
+
+
+                    break;
+                }
+
+                case "4": {
+
+                    break;
+                }
+
+                case "5": {
+
+                    break;
+                }
+
+                case "6": {
+                    loop = false;
+                    break;
+                }
+
+                default: {
+                    System.out.println("This is not a correct option");
+                    break;
+                }
             }
-            List<Record> records = diskIO.readRecords();
-            System.out.println("Zawartość pliku przed sortowaniem: " + records);
-            NaturalMergeSort sorter = new NaturalMergeSort(records);
-            List<Record> sortedRecords = sorter.sort();
-            System.out.println("Zawartość pliku po sortowaniu: " + sortedRecords);
         }
-*/
-        DiskIO temp = new DiskIO("ter");
+
+        /*DiskIO temp = new DiskIO("ter");
         int teste = temp.main("no");
-        BigBuffers test = new BigBuffers(10, 1001, "ter", teste);
+        BigBuffers test = new BigBuffers(50, 1001, "ter", teste);
         test.start();
         test.merge();
         test.showResults();
@@ -47,6 +81,6 @@ public class Main {
         //temp.showFile(); temp.se
         //temp.setFilename("ter2"); temp.showResults();
         //temp.showFile();
-        scanner.close();
+        scanner.close();*/
     }
 }

@@ -23,6 +23,7 @@ public class BigBuffers {
     private int buffersInUse;
     private String filename;
     private int stageNumber = 0;
+    private boolean showResults = true;
 
     public BigBuffers(int bufferSize, int bufferNumber, String filename, int fileSize) throws IOException {
         this.bufferNumber = bufferNumber;
@@ -34,6 +35,14 @@ public class BigBuffers {
         allocateBuffers();
         this.discIO = new DiskIO(filename);
         this.filename = filename;
+    }
+
+    public boolean isShowResults() {
+        return showResults;
+    }
+
+    public void setShowResults(boolean showResults) {
+        this.showResults = showResults;
     }
 
     private int pow(int a, int b){
@@ -124,6 +133,7 @@ public class BigBuffers {
         System.out.println("Stage 0");
         //discIO.showFile();
         System.out.println();
+        showResults();
         //int calcPhases = 100 / bufferSize;
         while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
             while(!stageEnd) {
