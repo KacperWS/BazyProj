@@ -19,8 +19,9 @@ public class BigBuffers {
     private int buffersInUse;
     private String filename;
     private int stageNumber = 0;
-    private boolean showResults = true;
-    private boolean showMidResults = false;
+    private int stageNumber2 = 0;
+    private boolean showResults;
+    private boolean showMidResults;
 
     public BigBuffers(int bufferSize, int bufferNumber, DiskIO filename, int fileSize) throws IOException {
         this.bufferNumber = bufferNumber;
@@ -41,7 +42,7 @@ public class BigBuffers {
     }
 
     public void setJumpToSet() {
-        jumpToSet = pow(bufferNumber - 1, stageNumber) * bufferSize * 6 * Integer.BYTES;
+        jumpToSet = pow(bufferNumber - 1, stageNumber2) * bufferSize * 6 * Integer.BYTES;
     }
 
     public void start() throws IOException {
@@ -65,6 +66,10 @@ public class BigBuffers {
             i = 0;
             this.sort();
             this.save();
+            stageNumber++;
+        }
+        if(showResults) {
+            System.out.println("Stage 1 parts: " + stageNumber);
         }
         merge();
     }
@@ -125,13 +130,12 @@ public class BigBuffers {
             discIO.showFile();
             System.out.println();
         }
-        showResults();
         while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
             while(!stageEnd) {
                 mergeBuffer();
                 updateBuffersBefore();
             }
-            stageNumber++;
+            stageNumber2++;
             updateBuffersAfter();
             stageEnd = false;
             if (testNum == 0) {
@@ -139,7 +143,7 @@ public class BigBuffers {
                 discIO.deleteFile();
                 discIO.setFilename("ter2.txt");
                 if(showMidResults) {
-                    System.out.println("Stage 2 part: " + stageNumber);
+                    System.out.println("Stage 2 part: " + stageNumber2);
                     discIO.showFile();
                     System.out.println();
                 }
@@ -149,7 +153,7 @@ public class BigBuffers {
                 discIO.deleteFile();
                 discIO.setFilename("ter1.txt");
                 if(showMidResults) {
-                    System.out.println("Stage 2 part: " + stageNumber);
+                    System.out.println("Stage 2 part: " + stageNumber2);
                     discIO.showFile();
                     System.out.println();
                 }
@@ -242,11 +246,11 @@ public class BigBuffers {
     }
 
     public void showResults(){
-        System.out.println("Stage 2 parts: " + stageNumber);
-        discIO.showFile();
+        System.out.println("Stage 1 parts: " + stageNumber + " Stage 2 parts: " + stageNumber2);
+        //discIO.showFile();
         discIO.showResults();
         discIO.check();
-        //check();
+        check();
     }
 
     public void check(){

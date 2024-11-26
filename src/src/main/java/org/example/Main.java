@@ -1,7 +1,6 @@
 package org.example;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -87,7 +86,7 @@ public class Main {
 
         DiskIO temp = new DiskIO("ter.txt");
         temp.createDataset();
-        BigBuffers test = new BigBuffers(200, 101, temp, temp.getRecToGenerate() * 4);
+        BigBuffers test = new BigBuffers(100, 1001, temp, temp.getRecToGenerate() * 4);
         test.setShowResults(false); test.setShowMidResults(false);
         test.start();
         //test.merge();

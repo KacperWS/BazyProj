@@ -17,7 +17,7 @@ public class DiskIO {
     private BufferedOutputStream bos;
     private RandomAccessFile raf;
     private final int recordSize = 6;
-    private int recToGenerate = 500000 * recordSize;
+    private int recToGenerate = 1000 * recordSize;
 
     public DiskIO(String filename) throws IOException {
         this.filename = filename;
