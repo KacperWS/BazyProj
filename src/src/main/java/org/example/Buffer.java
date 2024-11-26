@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Buffer {
-    private int jump;
-    private int bytesRead = 0;
+    private long jump;
+    private long bytesRead = 0;
     private int bufferSize = 100; //How many records can fit in
     private List<Record> buffer;
 
@@ -18,11 +18,11 @@ public class Buffer {
         return bufferSize;
     }
 
-    public int getBytesRead() {
+    public long getBytesRead() {
         return bytesRead;
     }
 
-    public int getJump() {
+    public long getJump() {
         return jump;
     }
 
@@ -46,7 +46,7 @@ public class Buffer {
         this.buffer = buffer;
     }
 
-    public void setNewJump(int n, int jumps){
+    public void setNewJump(int n, long jumps){
         jump += n * jumps;
     }
 

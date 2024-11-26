@@ -14,7 +14,7 @@ public class BigBuffers {
 
     private int testNum = 0;
     private boolean stageEnd = false;
-    private int  jumpToSet;
+    private long jumpToSet;
     private final int bytesWrite;
     private int buffersInUse;
     private String filename;
@@ -35,7 +35,7 @@ public class BigBuffers {
         this.filename = this.discIO.getFilename();
     }
 
-    private int pow(int a, int b){
+    private long pow(int a, int b){
         for(int i = 1; i < b; i++)
             a *= a;
         return a;
