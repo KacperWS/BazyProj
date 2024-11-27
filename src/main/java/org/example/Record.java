@@ -21,6 +21,7 @@ public class Record implements Cloneable{
         this.id = id;
     }
 
+<<<<<<< Updated upstream:src/main/java/org/example/Record.java
     @Override
     public Record clone() {
         try {
@@ -31,6 +32,8 @@ public class Record implements Cloneable{
         return null;
     }
 
+=======
+>>>>>>> Stashed changes:src/src/main/java/org/example/Record.java
     public int getId() {
         return this.id;
     }
