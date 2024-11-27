@@ -1,6 +1,6 @@
 package org.example;
 
-public class Record implements Cloneable{
+public class Record{
 
     private int id;
 
@@ -21,19 +21,6 @@ public class Record implements Cloneable{
         this.id = id;
     }
 
-<<<<<<< Updated upstream:src/main/java/org/example/Record.java
-    @Override
-    public Record clone() {
-        try {
-            return (Record) super.clone();  // Shallow copy
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-=======
->>>>>>> Stashed changes:src/src/main/java/org/example/Record.java
     public int getId() {
         return this.id;
     }

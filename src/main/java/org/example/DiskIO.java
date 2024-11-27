@@ -15,34 +15,70 @@ public class DiskIO {
     private int writeCounter;
     private BufferedInputStream bis;
     private BufferedOutputStream bos;
+    private RandomAccessFile raf;
     private final int recordSize = 6;
-    private final int recToGenerate = 100000 * recordSize;
+    private int recToGenerate = 10000 * recordSize;
 
     public DiskIO(String filename) throws IOException {
-        this.filename = filename + ".txt";
-        this.filenameNoext = filename;
+        this.filename = filename;
+        String[] stringArray = filename.split("\\.");
+        this.filenameNoext = stringArray[0];
     }
 
-    public void writeRecord(Record record) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true))) {
-            writer.write(record.toString());
-            writer.newLine();
+    public void writeRecord(int[] data) throws IOException {
+        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filename))) {
+            ByteBuffer bytes = ByteBuffer.allocate(recordSize * Integer.BYTES);
+            byte[] table = new byte[recordSize * Integer.BYTES];
+            for(int i = 0; i < recordSize; i++)
+                bytes.putInt(data[i]);
+            bytes.flip();
+            bytes.get(table);
+            bos.write(table);
         }
     }
 
-    public List<Record> readRecords() throws IOException {
-        List<Record> records = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                //records.add(new Record(Integer.parseInt(line)));
+    public void setRecToGenerate(int recToGenerate) {
+        this.recToGenerate = recToGenerate * recordSize;
+    }
+
+    public int getRecToGenerate() {
+        return recToGenerate;
+    }
+
+    public Record readRecord() throws IOException {
+        openIN();
+        byte[] buffer = new byte[Integer.BYTES * recordSize];
+        Record newRecord = null;
+        if (bis.read(buffer) != -1) {
+            ByteBuffer bufferme;
+            bufferme = ByteBuffer.wrap(buffer);
+            IntBuffer test = bufferme.asIntBuffer();
+            int i = 0; int hmm = this.recordSize;
+            int[] array = new int [hmm];
+            while(i < test.capacity()){
+                array[i%hmm] = test.get(i);
+                i++;
+                if(i%hmm == 0){
+                    newRecord = new Record(Arrays.copyOf(array, array.length));
+                    break;
+                }
             }
+        }else {
+            closeIN(); //File ended
+            return null; //Indicates that file ended
         }
-        return records;
+        closeIN();
+        return newRecord;
     }
 
-    public void clearFile() throws IOException {
-        new FileWriter(filename).close(); // Opróżnia plik
+    public String getFilename() {
+        return filenameNoext;
+    }
+
+    public void setFilename(String filename){
+        this.filename = filename;
+        String[] stringArray = filename.split("\\.");
+        this.filenameNoext = stringArray[0];
     }
 
     public void closeIN() throws IOException {
@@ -57,6 +93,18 @@ public class DiskIO {
         }
     }
 
+    public void closeRAF() throws IOException {
+        if (raf != null) {
+            raf.close();
+        }
+    }
+
+    public void closeALL() throws IOException {
+        closeIN();
+        closeOUT();
+        closeRAF();
+    }
+
     public void openIN() throws IOException {
         this.bis = new BufferedInputStream(new FileInputStream(filename));
     }
@@ -65,26 +113,27 @@ public class DiskIO {
         this.bos = new BufferedOutputStream(new FileOutputStream(Filename, mode));
     }
 
-    public void main(String args) {
-        String fileName = "ter.txt"; // Change this to your file's path
+    public void openRAF() throws FileNotFoundException {
+        this.raf = new RandomAccessFile(filename, "r");
+    }
 
-        // Example binary data (byte array)
-        byte[] binaryData = new byte[4 * this.recToGenerate];  // Simulate a large binary data array
+    public void createDataset() {
+        String fileName = "ter.txt";
+        deleteFile();
+        byte[] binaryData = new byte[4 * this.recToGenerate];
         Random rand = new Random();
-        // Fill the array with some data for demonstration
+
         ByteBuffer test = ByteBuffer.allocate(4 * this.recToGenerate);
         for (int i = 0; i < binaryData.length / 4; i++) {
             rand.nextInt();
-            int value = rand.nextInt(50);  // Small integer between 0 and 255
+            int value = rand.nextInt(8);
 
             test.putInt(value);
-            // Store this value across the 4 bytes
         }
         test.flip(); test.get(binaryData);
 
         try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(fileName))) {
-            // Write the data in chunks
-            int chunkSize = 1024; // Chunk size (1 KB)
+            int chunkSize = 1024;
             for (int i = 0; i < binaryData.length; i += chunkSize) {
                 int bytesToWrite = Math.min(chunkSize, binaryData.length - i);
                 bos.write(binaryData, i, bytesToWrite);
@@ -94,93 +143,25 @@ public class DiskIO {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        /*try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(fileName))) {
-            byte[] buffer = new byte[1024]; // Buffer size (1 KB)
-            int bytesRead;
-            ArrayList <Record> lista = new ArrayList<>();
-            // Read the file in chunks
-            while ((bytesRead = bis.read(buffer)) != -1) {
-                // Process the chunk of data (here we just print it in hex)
-                for (int i = 0; i < bytesRead; i++) {
-                    //System.out.format("0x%02X ", buffer[i]);
-                }
-                int buffSize = 10;
-                ByteBuffer bufferme;// = ByteBuffer.allocate(Integer.BYTES * 5 * buffSize);
-                bufferme = ByteBuffer.wrap(buffer);
-                IntBuffer test = bufferme.asIntBuffer();
-                int i = 0; int hmm;
-                int[] array = new int [6];
-                int[] array1 = new int [6];
-                while((hmm = test.get(i)) != 0){
-                    array[i%6] = hmm;
-                    System.out.println(hmm);
-                    i++;
-                    if(i > 0 && i%6 == 0){
-                        Record nowy = new Record(array);
-                        nowy.setData(array);
-                        array = array1;
-                        lista.add(nowy);
-                    }
-                }*/
-                /*int j = 0;
-                byte something[] = new byte[4];
-                while(j < 4){
-                    something[j] = (buffer[j]);
-                    j++;
-                }
-                int test = Integer.BYTES; BitSet a;
-                System.out.println();
-                int number = Integer.MAX_VALUE;
-                something[0] = (byte) (number >> 24);  // Most significant byte
-                something[1] = (byte) (number >> 16);
-                something[2] = (byte) (number >> 8);
-                something[3] = (byte) (number);       // Least significant byte
-                ByteBuffer buffer1 = ByteBuffer.wrap(something);
-                System.out.println(buffer1.getInt());
-                int number1 = 123456789;  // Example integer
-
-                // Create a ByteBuffer and put the int into it
-                ByteBuffer buffer2 = ByteBuffer.allocate(4);  // 4 bytes for an int
-                buffer2.putInt(number1);
-
-                // Convert ByteBuffer to byte array
-                byte[] byteArray = buffer2.array();
-
-                // Print the byte array
-                System.out.println("Byte array:");
-                for (byte b : byteArray) {
-                    System.out.printf("0x%02X ", b);  // Print each byte in hexadecimal format
-                }*/
-         /*       lista.clear();
-                System.out.println();
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
     }
 
     public List<Record> read(int bufferSize) throws IOException{
 
-        byte[] buffer = new byte[bufferSize * Integer.BYTES * recordSize]; // Buffer size contains ints so
+        byte[] buffer = new byte[bufferSize * Integer.BYTES * recordSize];
         List<Record> lista = new ArrayList<>();
-        // Read the file in chunks
         if (bis.read(buffer) != -1) {
-            ByteBuffer bufferme;// = ByteBuffer.allocate(Integer.BYTES * 5 * buffSize);
+            ByteBuffer bufferme;
             bufferme = ByteBuffer.wrap(buffer);
             IntBuffer test = bufferme.asIntBuffer();
             int i = 0; int hmm = this.recordSize;
             int[] array = new int [hmm];
-            //int[] array1 = new int [hmm];
             while(i < test.capacity()){
                 array[i%hmm] = test.get(i);
                 i++;
                 if(i%hmm == 0){
                     Record newRecord = new Record(Arrays.copyOf(array, array.length));
-                    //array = array1;
-                    if (newRecord.isEmpty())
-                        break;
+                    /*if (newRecord.isEmpty())
+                        break;*/
                     lista.add(newRecord);
                 }
             }
@@ -188,113 +169,147 @@ public class DiskIO {
             closeIN(); //File ended
             return null; //Indicates that file ended
         }
+        readCounter++;
         return lista;
     }
 
-    public void saveBuffers(List<Record> buffer, int bufferSize, int buffNum) throws IOException{
-        String file = "img/"+this.filenameNoext + buffNum + ".txt";
-        openOUT(file, false);
-        int bytesNum = buffer.size() * recordSize * Integer.BYTES;//bufferSize * Integer.BYTES;
-        byte[] binaryData = new byte[bytesNum];
-        ByteBuffer temp = ByteBuffer.allocate(bytesNum);
-        for (Record record : buffer) {
+    public void saveBuffer(Buffer buffer, String addon, int bufferSize) throws IOException{
+        openOUT(addon, true);
+        byte[] binaryData = new byte[bufferSize];
+        ByteBuffer temp = ByteBuffer.allocate(bufferSize);
+        List<Record> list = buffer.getBuffer();
+        for (Record record : list) {
             int[] data = record.getData();
             for (int j = 0; j < recordSize; j++) {
                 temp.putInt(data[j]);
             }
         }
         temp.flip();
-        temp.get(binaryData);
-        bos.write(binaryData);
-        //System.out.println("Binary data saved successfully in chunks to ");
+        temp.get(binaryData, 0, temp.limit());
+        bos.write(binaryData); writeCounter++;
         closeOUT();
     }
 
-    public void saveBuffer(List<Record> buffer, String fileName) throws IOException{
-        openOUT(fileName, true);
-        int bytesNum = buffer.size() * recordSize * Integer.BYTES;//bufferSize * Integer.BYTES;
-        byte[] binaryData = new byte[bytesNum];
-        ByteBuffer temp = ByteBuffer.allocate(bytesNum);
-        for (Record record : buffer) {
-            int[] data = record.getData();
-            for (int j = 0; j < recordSize; j++) {
-                temp.putInt(data[j]);
-            }
-        }
-        temp.flip();
-        temp.get(binaryData);
-        bos.write(binaryData);
-        //System.out.println("Binary data saved successfully in chunks to ");
-        closeOUT();
-    }
-
-    public Record sortHere(int n) throws IOException {
-
-        byte[] buffer = new byte[Integer.BYTES * recordSize]; // Buffer size contains ints so
-        Record newRecord = null;
-        // Read the file in chunks
-        if (bis.read(buffer) != -1) {
-            ByteBuffer bufferme;// = ByteBuffer.allocate(Integer.BYTES * 5 * buffSize);
-            bufferme = ByteBuffer.wrap(buffer);
+    public boolean sortHere(int n, Buffer buffer, int bufferSize) throws IOException {
+        openRAF();
+        byte[] bufferByte = new byte[bufferSize];
+        List<Record> lista = new ArrayList<>();
+        raf.seek(buffer.getJump() + buffer.getBytesRead());
+        if (raf.read(bufferByte) != -1) {
+            ByteBuffer bufferme;
+            bufferme = ByteBuffer.wrap(bufferByte);
             IntBuffer test = bufferme.asIntBuffer();
             int i = 0; int hmm = this.recordSize;
             int[] array = new int [hmm];
-            //int[] array1 = new int [hmm];
             while(i < test.capacity()){
                 array[i%hmm] = test.get(i);
                 i++;
                 if(i%hmm == 0){
-                    newRecord = new Record(Arrays.copyOf(array, array.length));
-                    //array = array1;
-                    break;
+                    Record newRecord = new Record(Arrays.copyOf(array, array.length));
+                    /*if (newRecord.isEmpty())
+                        break;*/
+                    lista.add(newRecord);
                 }
             }
         }else {
-            closeIN(); //File ended
-            return null; //Indicates that file ended
+            closeRAF(); //File ended
+            return true; //Indicates that file ended
         }
-        readCounter+=24;
-        //return lista;
-        return newRecord;
+        buffer.updateBytesRead(bufferSize);
+        buffer.setBuffer(lista); readCounter++;
+        closeRAF();
+        return false;
     }
 
     public void deleteFile(){
         Path path = Paths.get(filename);
-
         try {
-            // Attempt to delete the file
             Files.delete(path);
-            //System.out.println("File deleted successfully.");
         } catch (IOException e) {
             System.out.println("Failed to delete the file. Error: " + e.getMessage());
         }
     }
 
-    public int checkEnd(String path){
-        // Specify the folder path
-        Path folderPath = Paths.get(path);
-        boolean test = false; long test1 = 0;
-        try {
-            // Check if the folder exists and is a directory
-            if (Files.exists(folderPath) && Files.isDirectory(folderPath)) {
-                // Count the number of files in the folder
-                long fileCount = Files.list(folderPath)
-                        .filter(Files::isRegularFile) // Only count regular files
-                        .count();
-
-                int requiredFileCount = 1; // Replace with your desired number
-                test1 = fileCount;
-                return (int) fileCount;
-                // Check if the folder contains the required number of files
-                //test = fileCount == requiredFileCount;
-            } else {
-                System.out.println("The specified folder does not exist or is not a directory.");
+    public void showFile(){
+        try (FileInputStream fis = new FileInputStream(filename)) {
+            byte[] byteBuffer = new byte[4];
+            int i = 0;
+            int[] temp = new int[6];
+            while (fis.read(byteBuffer) != -1) {
+                ByteBuffer byteBufferWrapper = ByteBuffer.wrap(byteBuffer);
+                int number = byteBufferWrapper.getInt();
+                if(i%6 == 0 && i > 0){
+                    int x = temp[5];
+                    int suma = 0, xpower = x;
+                    suma += temp[0] + temp[1] * xpower;
+                    suma+= temp[2] * (xpower *= x);
+                    suma+= temp[3] * (xpower *= x);
+                    suma+= temp[4] * (xpower * x);
+                    System.out.println("Rekord = " + suma);
+                }
+                temp[i%6] = number;
+                if(i%6 == 0)
+                    System.out.print(i/6 + ". ");
+                System.out.print(number + " ");
+                i++;
             }
+            int x = temp[5];
+            int suma = 0, xpower = x;
+            suma += temp[0] + temp[1] * xpower;
+            suma+= temp[2] * (xpower *= x);
+            suma+= temp[3] * (xpower *= x);
+            suma+= temp[4] * (xpower * x);
+            System.out.println("Rekord = " + suma);
         } catch (IOException e) {
-            System.out.println("Error reading the folder: " + e.getMessage());
+            e.printStackTrace();
         }
-        return (int) test1;
-        //return test;
+    }
+
+    public void showResults(){
+        System.out.println("Reads: " + readCounter + " Writes: " + writeCounter);
+    }
+
+    public void check(){
+        try (FileInputStream fis = new FileInputStream(filename)) {
+            byte[] byteBuffer = new byte[4];
+            int i = 0;
+            int[] temp = new int[6];
+            int suma = 0; int next = -1; int check = 0;
+            while (fis.read(byteBuffer) != -1) {
+                ByteBuffer byteBufferWrapper = ByteBuffer.wrap(byteBuffer);
+                int number = byteBufferWrapper.getInt();
+                if(i%6 == 0 && i > 0){
+                    int x = temp[5];
+                    suma = 0; int xpower = x;
+                    suma += temp[0] + temp[1] * xpower;
+                    suma+= temp[2] * (xpower *= x);
+                    suma+= temp[3] * (xpower *= x);
+                    suma+= temp[4] * (xpower * x);
+                    if(next <= suma)
+                        check++;
+                    else check--;
+                    //System.out.println("Rekord = " + suma + " next " + next);
+                    next = suma;
+                }
+                temp[i%6] = number;
+                //System.out.print(number + " ");
+                i++;
+            }
+            int x = temp[5];
+            suma = 0;int xpower = x;
+            suma += temp[0] + temp[1] * xpower;
+            suma+= temp[2] * (xpower *= x);
+            suma+= temp[3] * (xpower *= x);
+            suma+= temp[4] * (xpower * x);
+            if(next <= suma)
+                check++;
+            else
+                check--;
+            //next = suma;
+            System.out.println("Rekord = " + check);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
 
