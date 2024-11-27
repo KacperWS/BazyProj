@@ -2,7 +2,7 @@ package org.example;
 
 public class Record{
 
-    private int id;
+    private long id;
 
     private int[] data;
 
@@ -16,12 +16,12 @@ public class Record{
         this.id = calcValue();
     }
 
-    public Record(int[] dataSet, int id) {
+    public Record(int[] dataSet, long id) {
         this.data = dataSet;
         this.id = id;
     }
 
-    public int getId() {
+    public long getId() {
         return this.id;
     }
 

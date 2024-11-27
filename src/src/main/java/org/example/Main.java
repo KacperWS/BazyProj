@@ -6,11 +6,11 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) throws IOException {
         Scanner scanner = new Scanner(System.in);
-        DiskIO diskIO = null; boolean[] variables = new boolean[2]; variables[0] = false; variables[1] = false;
+        DiskIO diskIO = null; boolean[] variables = new boolean[2]; variables[0] = false; variables[1] = true;
 
         System.out.println("What can I do for you? (Merging with large buffers)");
 
-        /*boolean loop = true;
+        boolean loop = true;
         while(loop) {
             System.out.println("1. Read from the file \n2. Create random dataset \n3. Read dataset from keyboard \n4. Change options \n5. Sorting \n6. Exit");
             String choice = scanner.nextLine();
@@ -36,6 +36,7 @@ public class Main {
                     System.out.println("Specify the number of records:");
                     choice = scanner.nextLine(); int temp = Integer.parseInt(choice);
                     diskIO = new DiskIO("ter.txt");
+                    diskIO.deleteFile();
                     for(int i = 0; i < temp; i++){
                         choice = scanner.nextLine();
                         String[] stringArray = choice.split(" ");
@@ -58,6 +59,7 @@ public class Main {
                         variables[0] = !variables[0];
                     else if(ch == 2)
                         variables[1] = !variables[1];
+                    System.out.println();
                     break;
                 }
 
@@ -82,21 +84,8 @@ public class Main {
                     break;
                 }
             }
-        }*/
+        }
 
-        DiskIO temp = new DiskIO("ter.txt");
-        temp.createDataset();
-        BigBuffers test = new BigBuffers(10, 101, temp, temp.getRecToGenerate() * 4);
-        test.setShowResults(false); test.setShowMidResults(false);
-        test.start();
-        //test.merge();
-        test.showResults();
-        //test.showResults1();
-        //test.check();
-        //temp = new DiskIO("ter2");
-        //temp.showFile(); temp.se
-        //temp.setFilename("ter2"); temp.showResults();
-        //temp.showFile();
         scanner.close();
     }
 }

@@ -35,9 +35,10 @@ public class BigBuffers {
         this.filename = this.discIO.getFilename();
     }
 
-    private long pow(int a, int b){
+    private long pow(long a, int b){
+        long suma = a;
         for(int i = 1; i < b; i++)
-            a *= a;
+            a *= suma;
         return a;
     }
 
@@ -78,7 +79,7 @@ public class BigBuffers {
         for (Buffer buffer : buffers) {
             List<Record> temp = buffer.getBuffer();
             if (temp.size() > 1) {
-                temp.sort(Comparator.comparingInt(Record::getId));
+                temp.sort(Comparator.comparingLong(Record::getId));
             } else {
                 break;
             }
@@ -130,6 +131,8 @@ public class BigBuffers {
             discIO.showFile();
             System.out.println();
         }
+        double logBaseB = Math.log((double)discIO.getRecToGenerate() / (6 * bufferSize)) / Math.log(bufferNumber);
+        int phaseCount = (int) (Math.ceil(logBaseB) - 1);
         while(buffers.get(1).getJump() < fileSize) { //Second buffer will read nothing so sorted
             while(!stageEnd) {
                 mergeBuffer();
@@ -161,6 +164,7 @@ public class BigBuffers {
             }
         }
         System.out.println("Sorting ended");
+        showResults();
     }
 
     private void mergeBuffer() throws IOException {
@@ -246,8 +250,8 @@ public class BigBuffers {
     }
 
     public void showResults(){
+        discIO.showFile();
         System.out.println("Stage 1 parts: " + stageNumber + " Stage 2 parts: " + stageNumber2);
-        //discIO.showFile();
         discIO.showResults();
         discIO.check();
         check();

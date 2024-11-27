@@ -17,7 +17,7 @@ public class DiskIO {
     private BufferedOutputStream bos;
     private RandomAccessFile raf;
     private final int recordSize = 6;
-    private int recToGenerate = 2500000 * recordSize;
+    private int recToGenerate = 10000 * recordSize;
 
     public DiskIO(String filename) throws IOException {
         this.filename = filename;
@@ -26,7 +26,7 @@ public class DiskIO {
     }
 
     public void writeRecord(int[] data) throws IOException {
-        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filename))) {
+        try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filename, true))) {
             ByteBuffer bytes = ByteBuffer.allocate(recordSize * Integer.BYTES);
             byte[] table = new byte[recordSize * Integer.BYTES];
             for(int i = 0; i < recordSize; i++)
@@ -215,7 +215,7 @@ public class DiskIO {
             closeRAF(); //File ended
             return true; //Indicates that file ended
         }
-        buffer.updateBytesRead(bufferSize);
+        buffer.updateBytesRead(lista.size() * 6 * Integer.BYTES);
         buffer.setBuffer(lista); readCounter++;
         closeRAF();
         return false;
